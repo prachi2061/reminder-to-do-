@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>remind me -your reminder</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+    }
+    #app-title {
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+      margin-bottom: 30px;
+    }
+    .panel {
+      background: rgba(30, 30, 30, 0.9);
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+    .panel-heading {
+      background-color: #212121 !important;
+      border-bottom: 1px solid #333;
+      color: #fff;
+      text-align: center;
+    }
+    .btn {
+      border-radius: 20px;
+    }
+    .btn-primary {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+    .btn-success {
+      background-color: #28a745;
+    }
+    .btn-danger {
+      background-color: #dc3545;
+    }
+    .progress-bar-container {
+      background: #333;
+      height: 30px;
+      position: relative;
+      margin-top: 20px;
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff99, #33ccff);
+      text-align: center;
+      color: black;
+      line-height: 30px;
+      transition: width 0.3s ease;
+    }
+    .manageable {
+      background-color: #28a745;
+      padding: 10px;
+      text-align: center;
+      border-radius: 5px;
+      color: black;
+      box-shadow: 0 0 10px #28a745;
+    }
+    .overload {
+      background-color: #dc3545;
+      padding: 10px;
+      text-align: center;
+      border-radius: 5px;
+      color: black;
+      box-shadow: 0 0 10px #dc3545;
+    }
+    table {
+      background: rgba(30, 30, 30, 0.8);
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+    table th, table td {
+      color: #fff;
+      border-color: #555 !important;
+    }
+    .task-done {
+      text-decoration: line-through;
+      color: #888;
+    }
+    input.form-control {
+      background: #212121;
+      color: #fff;
+      border: 1px solid #444;
+    }
+    input.form-control::placeholder {
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="col-sm-10 col-sm-offset-1">
+    <h1 id="app-title" class="text-center">Advanced To-Do List</h1>
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="text-center">Add New Task</h3>
+      </div>
+      <div class="panel-body">
+        <form id="task-form">
+          <div class="col-sm-8">
+            <input type="text" id="task-input" class="form-control" placeholder="Enter new task">
+          </div>
+          <div class="col-sm-4">
+            <button type="submit" class="btn btn-primary btn-block">Add</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div id="stats" class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="text-center">Task Statistics</h3>
+      </div>
+      <div class="panel-body">
+        <p>Total Tasks: <span id="total-tasks">0</span></p>
+        <p>Tasks Left: <span id="tasks-left">0</span></p>
+        <p>Completed Tasks: <span id="completed-tasks">0</span></p>
+        <div id="manage-status" class="manageable">Manageable</div>
+      </div>
+    </div>
+    <div class="progress-bar-container">
+      <div id="progress-bar" class="progress-bar" style="width: 0%;">0%</div>
+    </div>
+    <table class="table">
+      <thead>
+      <tr>
+        <th>Task</th>
+        <th>Mark Complete</th>
+        <th>Delete</th>
+      </tr>
+      </thead>
+      <tbody id="task-list">
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+  const tasks = JSON.parse(localStorage.getItem('tasks')) || []; 
+
+  document.getElementById('task-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const taskInput = document.getElementById('task-input');
+    const taskName = taskInput.value.trim();
+    if (taskName) {
+      tasks.push({ name: taskName, done: false });
+      taskInput.value = '';
+      saveTasks();
+      updateUI();
+    }
+  });
+
+  function saveTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks)); 
+  }
+
+  function updateUI() {
+    const taskList = document.getElementById('task-list');
+    taskList.innerHTML = '';
+    tasks.forEach((task, index) => {
+      const row = document.createElement('tr');
+      const taskNameCell = document.createElement('td');
+      taskNameCell.textContent = task.name;
+      if (task.done) taskNameCell.classList.add('task-done');
+      const completeCell = document.createElement('td');
+      const completeButton = document.createElement('button');
+      completeButton.textContent = task.done ? 'Undo' : 'Complete';
+      completeButton.classList.add('btn', 'btn-success');
+      completeButton.onclick = () => {
+        task.done = !task.done;
+        saveTasks();
+        updateUI();
+      };
+      completeCell.appendChild(completeButton);
+      const deleteCell = document.createElement('td');
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.classList.add('btn', 'btn-danger');
+      deleteButton.onclick = () => {
+        tasks.splice(index, 1);
+        saveTasks();
+        updateUI();
+      };
+      deleteCell.appendChild(deleteButton);
+      row.appendChild(taskNameCell);
+      row.appendChild(completeCell);
+      row.appendChild(deleteCell);
+      taskList.appendChild(row);
+    });
+    updateStats();
+  }
+
+  function updateStats() {
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => task.done).length;
+    const tasksLeft = totalTasks - completedTasks;
+    document.getElementById('total-tasks').textContent = totalTasks;
+    document.getElementById('tasks-left').textContent = tasksLeft;
+    document.getElementById('completed-tasks').textContent = completedTasks;
+    const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+    const progressBar = document.getElementById('progress-bar');
+    progressBar.style.width = progress + '%';
+    progressBar.textContent = Math.round(progress) + '%';
+    const manageStatus = document.getElementById('manage-status');
+    manageStatus.textContent = tasksLeft < 10 ? 'Manageable' : 'Tasks Overload';
+    manageStatus.className = tasksLeft < 10 ? 'manageable' : 'overload';
+  }
+
+  
+  updateUI();
+</script>
+</body>
+</html>
